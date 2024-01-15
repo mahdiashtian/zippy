@@ -3,6 +3,7 @@ from fastapi import Form
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
+from sqlalchemy.orm import Session
 from typing_extensions import Annotated
 
 from src.auth import service
@@ -11,9 +12,10 @@ from src.auth.jwt import create_access_token, create_refresh_token
 from src.auth.responses import JWTResponse
 from src.auth.utils import set_jwt_cookies, unset_jwt_cookies
 from src.config import settings
-from src.dependencies import get_current_user
+from src.dependencies import get_current_user, get_db
 from src.exceptions import NotAuthenticated
-from src.users import service as user_service
+from src.social.service import get_or_create_room
+from src.users import service as user_service, models
 
 router = APIRouter()
 
@@ -22,8 +24,9 @@ REFRESH_TOKEN_EXPIRE_MINUTES = settings.REFRESH_TOKEN_EXPIRE_MINUTES
 
 
 @router.post("/login/")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = await service.authenticate(form_data.username, form_data.password)
+async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+                db: Annotated[Session, Depends(get_db)]):
+    user = await service.authenticate(form_data.username, form_data.password, db)
     if not user:
         raise IncorrectUsernameOrPassword
 
@@ -40,12 +43,15 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
     response = JWTResponse(access_token=access_token, refresh_token=refresh_token)
     await set_jwt_cookies(response, access_token, refresh_token)
-
+    room = await get_or_create_room(db)
+    data = dict(room_id=room.id)
+    await user_service.update_user(data, user, db)
     return response
 
 
 @router.post("/refresh/")
-async def refresh(refresh_token: Annotated[str, Form()]):
+async def refresh(refresh_token: Annotated[str, Form()],
+                  db: Annotated[Session, Depends(get_db)]):
     try:
         token = refresh_token
         payload = jwt.decode(
@@ -57,7 +63,7 @@ async def refresh(refresh_token: Annotated[str, Form()]):
         raise NotAuthenticated
     else:
         user_id: int = payload.get("id", None)
-        user = await user_service.get_user_by_id(user_id)
+        user = await user_service.get_user_by_id(user_id, db)
         if user is None:
             raise NotAuthenticated
 
@@ -75,14 +81,19 @@ async def refresh(refresh_token: Annotated[str, Form()]):
         response = JWTResponse(access_token=access_token, refresh_token=refresh_token)
 
         await set_jwt_cookies(response, access_token, refresh_token)
-
+        room = await get_or_create_room(db)
+        data = dict(room_id=room.id)
+        await user_service.update_user(data, user, db)
         return response
 
 
 @router.post("/logout/")
-async def logout(user=Depends(get_current_user)):
+async def logout(user: Annotated[models.User, Depends(get_current_user)],
+                 db: Annotated[Session, Depends(get_db)]):
     response = JSONResponse(content={"status": "ok"})
     response.delete_cookie(key="refresh_token", path="/")
     response.delete_cookie(key="access_token", path="/")
     await unset_jwt_cookies(response)
+    data = dict(room_id=None)
+    await user_service.update_user(data, user, db)
     return response

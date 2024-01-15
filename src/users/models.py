@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import Integer, Enum, DateTime, String, Boolean, Column, ForeignKey, Table
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, column_property, validates, re
 
 from src.fields import ImageField
 from src.psql_database import Base
+from src.social.models import Room
 from src.users.constants import GenderChoices
 from src.users.fields import Password
 
@@ -53,6 +54,8 @@ class User(Base):
         back_populates="followed_users",
         lazy="joined"
     )
+    room_id: Mapped[Optional[int]] = mapped_column(ForeignKey("rooms.id"))
+    room: Mapped["Room"] = relationship(back_populates="users")
 
     full_name: Mapped[str] = column_property(first_name + " " + last_name)
 

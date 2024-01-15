@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, WebSocketException
 
 
 class DetailedHTTPException(HTTPException):
@@ -9,6 +9,14 @@ class DetailedHTTPException(HTTPException):
 
     def __init__(self, **kwargs: Dict[str, Any]) -> None:
         super().__init__(status_code=self.STATUS_CODE, detail=self.DETAIL, **kwargs)
+
+
+class DetailedWSException(WebSocketException):
+    STATUS_CODE = status.WS_1008_POLICY_VIOLATION
+    DETAIL = "WebSocket error"
+
+    def __init__(self) -> None:
+        super().__init__(code=self.STATUS_CODE, reason=self.DETAIL)
 
 
 class PermissionDenied(DetailedHTTPException):
