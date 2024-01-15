@@ -1,16 +1,14 @@
-from typing import Union, Type
+from typing import Union, Type, List
 
 from fastapi import Path
-from sqlalchemy import Row, Sequence
 from sqlalchemy.orm import Session
 from typing_extensions import Annotated
 
-from src.annotations import _TP
 from src.users import models
 from src.users import schemas
 
 
-async def get_users(db: Session) -> Sequence[Row[_TP]]:
+async def get_users(db: Session) -> List[Type[models.User]]:
     result = db.query(models.User).order_by('id').all()
     return result
 

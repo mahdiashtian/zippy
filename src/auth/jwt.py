@@ -12,7 +12,7 @@ SECRET_KEY = settings.SECRET_KEY
 async def create_access_token(
         username: str,
         user_id: int,
-        expires_delta: Optional[timedelta] = None):
+        expires_delta: Optional[timedelta] = None) -> str:
     encode = {"sub": username, "id": user_id}
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -25,7 +25,7 @@ async def create_access_token(
 async def create_refresh_token(
         username: str,
         user_id: int,
-        expires_delta: Optional[timedelta] = None):
+        expires_delta: Optional[timedelta] = None) -> str:
     encode = {"sub": username, "id": user_id}
     if expires_delta:
         expire = datetime.utcnow() + expires_delta

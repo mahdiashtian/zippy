@@ -1,9 +1,10 @@
 from typing import Optional
 
-from fastapi import status, WebSocketDisconnect
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.security.utils import get_authorization_scheme_param
 from fastapi.websockets import WebSocket
+
+from src.social.exceptions import NotAuthenticatedWS
 
 
 class OAuth2PasswordBearerWS(OAuth2PasswordBearer):
@@ -12,8 +13,7 @@ class OAuth2PasswordBearerWS(OAuth2PasswordBearer):
         scheme, param = get_authorization_scheme_param(authorization)
         if not authorization or scheme.lower() != "bearer":
             if self.auto_error:
-                raise WebSocketDisconnect(code=status.WS_1008_POLICY_VIOLATION,
-                                          reason="Not authenticated")
+                raise NotAuthenticatedWS
             else:
                 return None
         return param

@@ -1,11 +1,9 @@
 from typing import Type
 
 from fastapi import Form, Path, Depends
-from sqlalchemy import Row
 from sqlalchemy.orm import Session
 from typing_extensions import Annotated
 
-from src.annotations import _TP
 from src.dependencies import get_db
 from src.users import service, models
 from src.users.exceptions import UserAlreadyExists, UserDoesNotExist

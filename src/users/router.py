@@ -1,12 +1,10 @@
-from typing import List
+from typing import List, Type
 
 from fastapi import APIRouter, Depends, Body
 from fastapi import UploadFile
-from sqlalchemy import Sequence, Row
 from sqlalchemy.orm import Session
 from typing_extensions import Annotated
 
-from src.annotations import _TP
 from src.dependencies import get_db
 from src.users import models
 from src.users import schemas
@@ -19,19 +17,19 @@ router = APIRouter()
 
 
 @router.get("/", response_model=List[schemas.User], description="Get list users")
-async def list_user(db: Annotated[Session, Depends(get_db)]) -> Sequence[Row[_TP]]:
+async def list_user(db: Annotated[Session, Depends(get_db)]) -> List[Type[models.User]]:
     users = await service.get_users(db)
     return users
 
 
 @router.get("/{user_id}/", response_model=schemas.User, description="Get detail user")
-async def detail_user(valid_user_for_get: Annotated[models.User, Depends(valid_user_get)]) -> Row[_TP]:
+async def detail_user(valid_user_for_get: Annotated[models.User, Depends(valid_user_get)]) -> List[Type[models.User]]:
     return valid_user_for_get
 
 
 @router.post("/", response_model=schemas.User, description="Create new user")
 async def create_user(user: Annotated[schemas.UserCreate, Depends(valid_user_create)],
-                      db: Annotated[Session, Depends(get_db)]) -> Row[_TP]:
+                      db: Annotated[Session, Depends(get_db)]) -> List[Type[models.User]]:
     return await service.create_user(user, db)
 
 
@@ -45,14 +43,14 @@ async def delete_user(valid_user_for_delete: Annotated[schemas.User, Depends(val
 @router.patch("/{user_id}/", response_model=schemas.User, description="Update user")
 async def update_user(valid_user_for_update: Annotated[models.User, Depends(valid_user_update)],
                       data: Annotated[schemas.UserUpdate, Body()],
-                      db: Annotated[Session, Depends(get_db)]) -> Row[_TP]:
+                      db: Annotated[Session, Depends(get_db)]) -> List[Type[models.User]]:
     return await service.update_user(data, valid_user_for_update, db)
 
 
 @router.patch("/{user_id}/change-image", response_model=schemas.User, description="Change user image")
 async def change_image(valid_user_for_update: Annotated[models.User, Depends(valid_user_update)],
                        db: Annotated[Session, Depends(get_db)],
-                       file: Annotated[UploadFile, bytes] = None) -> Row[_TP]:
+                       file: Annotated[UploadFile, bytes] = None) -> List[Type[models.User]]:
     if file:
         path = await save_file(file)
     else:
@@ -64,7 +62,7 @@ async def change_image(valid_user_for_update: Annotated[models.User, Depends(val
               description="Change background user image")
 async def change_background_image(valid_user_for_update: Annotated[models.User, Depends(valid_user_update)],
                                   db: Annotated[Session, Depends(get_db)],
-                                  file: Annotated[UploadFile, bytes] = None) -> Row[_TP]:
+                                  file: Annotated[UploadFile, bytes] = None) -> List[Type[models.User]]:
     if file:
         path = await save_file(file)
     else:
@@ -75,12 +73,12 @@ async def change_background_image(valid_user_for_update: Annotated[models.User, 
 @router.patch("/{user_id}/follow", response_model=schemas.User, description="Follow user")
 async def follow_user(valid_user_for_update: Annotated[models.User, Depends(valid_user_update)],
                       valid_user_for_following: Annotated[models.User, Depends(valid_user_follow)],
-                      db: Annotated[Session, Depends(get_db)]) -> Row[_TP]:
+                      db: Annotated[Session, Depends(get_db)]) -> List[Type[models.User]]:
     return await service.follow_user(valid_user_for_update, valid_user_for_following, db)
 
 
 @router.patch("/{user_id}/unfollow", response_model=schemas.User, description="Unfollow user")
 async def unfollow_user(valid_user_for_update: Annotated[models.User, Depends(valid_user_update)],
                         valid_user_for_following: Annotated[models.User, Depends(valid_user_follow)],
-                        db: Annotated[Session, Depends(get_db)]) -> Row[_TP]:
+                        db: Annotated[Session, Depends(get_db)]) -> List[Type[models.User]]:
     return await service.unfollow_user(valid_user_for_update, valid_user_for_following, db)
