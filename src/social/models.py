@@ -5,7 +5,6 @@ from sqlalchemy import Integer, DateTime, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.psql_database import Base
-from src.users.models import User
 
 
 class Room(Base):
