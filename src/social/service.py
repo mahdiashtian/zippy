@@ -1,17 +1,16 @@
 from typing import Union, Type
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from src.social import models
-
-
-async def get_room(room_id: int, db: Session) -> Type[models.Room]:
-    return db.query(models.Room).filter(models.Room.id == room_id).first()
+from src.social.models import Room
+from src.users.models import User
 
 
 async def get_or_create_room(db: Session) -> Union[Type[models.Room], models.Room]:
-    result = db.query(models.Room).filter(
-        models.Room.is_active == True
+    result = db.query(Room).join(User).group_by(Room.id).having(func.count(User.id) < 50).filter(
+        Room.is_active == True
     ).first()
     if result:
         return result

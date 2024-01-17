@@ -7,7 +7,6 @@ from sqlalchemy.orm import Mapped, mapped_column, column_property, validates, re
 
 from src.fields import ImageField
 from src.psql_database import Base
-from src.social.models import Room
 from src.users.constants import GenderChoices
 from src.users.fields import Password
 

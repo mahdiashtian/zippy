@@ -40,7 +40,6 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
         user_id=user.id,
         expires_delta=settings.REFRESH_TOKEN_LIFETIME
     )
-
     response = JWTResponse(access_token=access_token, refresh_token=refresh_token)
     await set_jwt_cookies(response, access_token, refresh_token)
     room = await get_or_create_room(db)

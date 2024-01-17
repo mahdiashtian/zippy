@@ -3,8 +3,6 @@ from fastapi import WebSocket, WebSocketDisconnect
 from typing_extensions import Annotated
 
 from src.dependencies import get_current_user_ws
-from src.social import models as social_models
-from src.social.dependencies import valid_room_get
 from src.social.exceptions import PermissionDeniedWS
 from src.social.manager import ConnectionManager
 from src.users import models as user_model
@@ -13,13 +11,14 @@ router = APIRouter()
 manager = ConnectionManager()
 
 
-@router.websocket("/ws/{room_id}")
+@router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket,
-                             room: Annotated[social_models.Room, Depends(valid_room_get)],
                              user: Annotated[user_model.User, Depends(get_current_user_ws)]):
-    if user.room != room:
+    room = user.room
+    if not room:
         raise PermissionDeniedWS
-    await manager.connect(websocket)
+    room_id = room.id
+    await manager.connect(room_id, websocket)
     try:
         while True:
             data = await websocket.receive_text()
@@ -31,6 +30,6 @@ async def websocket_endpoint(websocket: WebSocket,
                 },
                 "message": data
             }
-            await manager.broadcast_json(message)
+            await manager.broadcast_json(room_id, message)
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        manager.disconnect(room_id, websocket)
