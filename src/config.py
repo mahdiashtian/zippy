@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     MEDIA: MediaSettings = MediaSettings()
 
     class Config:
-        env_file: str = '../.env'
+        env_file: str = '.env'
         env_file_encoding: str = 'utf-8'
         case_sensitive: bool = True
 
